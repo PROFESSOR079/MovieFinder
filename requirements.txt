@@ -1,2 +1,5 @@
 requests
 Pillow
+requests
+Pillow
+python-dotenv
