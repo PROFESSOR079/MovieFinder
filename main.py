@@ -1,5 +1,6 @@
 import tkinter as tk
 from api_handler import search_movies
+from tkinter import messagebox
 
 # --- Constants ---
 BG_COLOR = "#1a1a2e"
@@ -277,6 +278,13 @@ def create_movie_card(parent, movie):
 
 
 def build_window():
+    from api_handler import is_api_configured
+    if not is_api_configured():
+        tk.messagebox.showerror(
+            "API Key Missing",
+            "TMDB API key not found!\n\nCreate a .env file and add:\nTMDB_API_KEY=your_key_here"
+        )
+
     root = tk.Tk()
     root.title("🎬 Movie Finder")
     root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
@@ -365,28 +373,52 @@ def build_window():
     def on_search():
         query = search_entry.get().strip()
         if not query or query == "Search movies...":
+            status_label.config(text="⚠️ Please enter a movie title.")
             return
 
         for widget in scrollable_frame.winfo_children():
             widget.destroy()
 
-        status_label.config(text=f"Searching for: '{query}'...")
+        # Loading state
+        status_label.config(text="⏳ Loading...")
+        loading_label = tk.Label(
+            scrollable_frame,
+            text="🔍 Searching for movies...",
+            font=FONT_NORMAL,
+            bg=BG_COLOR,
+            fg=SUBTEXT_COLOR,
+        )
+        loading_label.pack(pady=50)
         root.update()
 
-        movies = search_movies(query)
-
-        if not movies:
-            status_label.config(text="No results found. Try another title.")
+        try:
+            movies = search_movies(query)
+        except Exception:
+            status_label.config(text="❌ Something went wrong. Check your connection.")
+            loading_label.destroy()
             tk.Label(
                 scrollable_frame,
-                text="😕 No movies found.",
+                text="🌐 No internet connection or API error.",
+                font=FONT_NORMAL,
+                bg=BG_COLOR,
+                fg=ACCENT_COLOR,
+            ).pack(pady=50)
+            return
+
+        loading_label.destroy()
+
+        if not movies:
+            status_label.config(text=f"😕 No results for '{query}'.")
+            tk.Label(
+                scrollable_frame,
+                text="😕 No movies found. Try another title.",
                 font=FONT_NORMAL,
                 bg=BG_COLOR,
                 fg=SUBTEXT_COLOR,
             ).pack(pady=50)
             return
 
-        status_label.config(text=f"Found {len(movies)} results for '{query}'")
+        status_label.config(text=f"✅ Found {len(movies)} results for '{query}'")
         for movie in movies:
             create_movie_card(scrollable_frame, movie)
 

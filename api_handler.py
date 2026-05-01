@@ -13,6 +13,9 @@ HEADERS = {
     "Authorization": f"Bearer {API_KEY}"
 }
 
+def is_api_configured() -> bool:
+    """Check if API key is set."""
+    return API_KEY is not None and API_KEY != ""
 
 def search_movies(query: str) -> list:
     """Search movies by title. Returns list of movie dicts."""
