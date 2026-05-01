@@ -19,81 +19,103 @@ WINDOW_HEIGHT = 650
 
 
 def create_movie_card(parent, movie):
-    """Create a single movie card widget."""
+    """Create a single movie card widget with poster."""
+    from api_handler import download_poster
+
     card = tk.Frame(parent, bg=CARD_BG, pady=10, padx=10, cursor="hand2")
     card.pack(fill="x", padx=10, pady=5)
 
+    # Left side — poster
+    poster_frame = tk.Frame(card, bg=CARD_BG, width=80)
+    poster_frame.pack(side="left", padx=(0, 15))
+    poster_frame.pack_propagate(False)
+
+    poster_label = tk.Label(poster_frame, bg=CARD_BG, text="🎬", font=("Helvetica", 30))
+    poster_label.pack(expand=True)
+
+    # Load poster in background
+    def load_poster():
+        poster_path = movie.get("poster_path", "")
+        img = download_poster(poster_path)
+        if img:
+            poster_label.config(image=img, text="")
+            poster_label.image = img  # keep reference
+
+    parent.after(100, load_poster)
+
+    # Right side — info
+    info_frame = tk.Frame(card, bg=CARD_BG)
+    info_frame.pack(side="left", fill="both", expand=True)
+
     # Title
     title = movie.get("title", "Unknown Title")
-    title_label = tk.Label(
-        card,
+    tk.Label(
+        info_frame,
         text=title,
         font=FONT_CARD_TITLE,
         bg=CARD_BG,
         fg=TEXT_COLOR,
         anchor="w",
-        wraplength=600,
-    )
-    title_label.pack(fill="x")
+        wraplength=580,
+    ).pack(fill="x")
 
-    # Release date + Rating row
-    info_frame = tk.Frame(card, bg=CARD_BG)
-    info_frame.pack(fill="x", pady=4)
+    # Release date + Rating
+    meta_frame = tk.Frame(info_frame, bg=CARD_BG)
+    meta_frame.pack(fill="x", pady=4)
 
     release = movie.get("release_date", "N/A")
     year = release[:4] if release and release != "N/A" else "N/A"
 
-    date_label = tk.Label(
-        info_frame,
+    tk.Label(
+        meta_frame,
         text=f"📅 {year}",
         font=FONT_SMALL,
         bg=CARD_BG,
         fg=SUBTEXT_COLOR,
-    )
-    date_label.pack(side="left", padx=(0, 15))
+    ).pack(side="left", padx=(0, 15))
 
     rating = movie.get("vote_average", 0)
     rating_color = "#f5c518" if rating >= 7 else "#a8a8b3"
-    rating_label = tk.Label(
-        info_frame,
+    tk.Label(
+        meta_frame,
         text=f"⭐ {rating:.1f}/10",
         font=FONT_SMALL,
         bg=CARD_BG,
         fg=rating_color,
-    )
-    rating_label.pack(side="left")
+    ).pack(side="left")
 
     # Overview
     overview = movie.get("overview", "No description available.")
     if len(overview) > 200:
         overview = overview[:200] + "..."
 
-    overview_label = tk.Label(
-        card,
+    tk.Label(
+        info_frame,
         text=overview,
         font=FONT_SMALL,
         bg=CARD_BG,
         fg=SUBTEXT_COLOR,
         anchor="w",
         justify="left",
-        wraplength=750,
-    )
-    overview_label.pack(fill="x")
+        wraplength=650,
+    ).pack(fill="x")
 
     # Hover effect
+    all_widgets = [card, poster_frame, poster_label, info_frame, meta_frame]
+
     def on_enter(e):
-        card.config(bg="#1a4a8a")
-        for widget in card.winfo_children():
-            widget.config(bg="#1a4a8a")
-            for sub in widget.winfo_children():
-                sub.config(bg="#1a4a8a")
+        for w in all_widgets:
+            try:
+                w.config(bg="#1a4a8a")
+            except Exception:
+                pass
 
     def on_leave(e):
-        card.config(bg=CARD_BG)
-        for widget in card.winfo_children():
-            widget.config(bg=CARD_BG)
-            for sub in widget.winfo_children():
-                sub.config(bg=CARD_BG)
+        for w in all_widgets:
+            try:
+                w.config(bg=CARD_BG)
+            except Exception:
+                pass
 
     card.bind("<Enter>", on_enter)
     card.bind("<Leave>", on_leave)

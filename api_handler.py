@@ -51,3 +51,23 @@ def get_poster_url(poster_path: str) -> str:
     if poster_path:
         return f"{IMAGE_BASE_URL}{poster_path}"
     return ""
+
+def download_poster(poster_path: str):
+    """Download poster image and return as ImageTk object."""
+    from PIL import Image, ImageTk
+    import io
+
+    url = get_poster_url(poster_path)
+    if not url:
+        return None
+
+    try:
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()
+        image_data = response.content
+        image = Image.open(io.BytesIO(image_data))
+        image = image.resize((80, 120))
+        return ImageTk.PhotoImage(image)
+    except Exception as e:
+        print(f"Poster download failed: {e}")
+        return None
