@@ -21,7 +21,7 @@ A Python desktop application to search and explore movies using the TMDB API.
 ## ⚙️ Setup
 1. Clone the repo
 ```bash
-   git clone https://github.com/YOUR_USERNAME/movie-finder.git
+   git clone https://github.com/PROFESSOR079/movie-finder.git
    cd movie-finder
 ```
 2. Install dependencies
